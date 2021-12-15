@@ -1,0 +1,102 @@
+1. Network Programming
+Implement A Simple Chat Server
+In this project we will leverage the OS API which provides internetworking communication via sockets. Your goal is to build a multi-user chat server. The chat server allow clients to connect and perform the following operations:
+login <username> - “login with username”
+create <room> - “create a room”
+join <room> - “join a room”
+leave <room> - “leave a room”
+users - “list all users”
+rooms - “list all rooms”
+connect <user> - "connect to user (DM)"
+disconnect <user> - “disconnect to user”
+exit or logout - “exit chat”
+Server Details
+When a user connects to the server, they will be logged in as a GUEST user and join the Lobby (i.e. the default room). Users can issue any of the commands above, all other text will be sent to the other users also logged in, based on the rooms and direct connections established. Users can belong to more than one room, and be directly connected (i.e. DM) to more than one user at a time. Quite confusing!
+Your job is to write the user management portion of the server. You will be given a simple echo server that allows anyone connected to type text and send it to everyone connected to the server.
+Currently, the server is limited and does not contain any neccessary use of data structures to manage the rooms and connections between all the users. Currently, we have implemented a few functions to insert into a linked list in order to keep track of all the connects. Feel free to expand on linked list code, adapt your prior linked list code, or develop new data structures.
+Because you will implement a multi-threaded server, all the data structures will be shared; making your solution easier to implement. Because you will allow multiple threads to access the data structures, you must implement some sort of synchronization mechanism to avoid race conditions that may occur. We suggest you use mutex locks. You should follow the reader-writers problem covered in the textbook and slides that allows multiple readers to read, but never multiple writers, or readers and writers to access the data structures simultaneously.
+To make the implementation simple, we will focus on the server side, and use a TCP client (i.e. telnet) to send commands and chat messages. Although this is not perfect, it allows you to get something up and tested quickly. For those who are ambitious and want to develop your own client, there are several examples out on the web as starter code.
+Running the Server
+Compile the server code using the Makefile. Open a terminal and run the server by typing the name of the generated executable at the command prompt.
+$ make server
+$ server
+To terminate the server, type Ctrl-C. This will call the signal handler function in server.c. Currently, it just terminates abruptly. It should gracefully terminate, and deallocate any memory used while running. This is left as part of your solution you must write.
+To see a functioning server, feel free to run the reference implementation server_ref. It has some bugs, but should be enough to check your implementation against.
+Data Structures
+This project involves the creation of a data structure that grows and shrinks dynamically. A linked list is best suited, but if your team is ambitous a more scalable solution would be some sort of hashMap + Linked list combination. You will need to keep track of all the users (i.e. their username and socket descriptors), all the rooms and what users are in what rooms, and all the direct connections. Because each person connected to the server will have their own server manipulating your data structures, you will need to make sure that your operations on the data structure are thread safe. Some operations will just be reads (i.e. list users, list rooms). Others will be write operations (i.e. join room, leave room, connect to user X).
+Telent Client
+In order to connect to your server, you will need to download and install a ‘telnet’ client. You can use brew (i.e. MacOS) or apt-get (i.e. Unix/Linux OS) install methods, or install putty(i.e. for Windows).
+Install Commands
+MacOs - brew install telnet
+Linux - apt-get install telnet
+Windows - Download Putty
+Running Telent
+Open up a separate terminal to run your telnet client. If you are working by yourself, you may want to have multiple terminals running to simulate multiple users chatting.
+telnet [hostname/ipaddress] [port number]
+Currently, the sample code runs the server at PORT 8888. To connect to the server just simply type:
+$ telnet localhost 8888`
+This assumes you are running the server on your own local machine, or within your own codio session. If you are trying to access a server running on codio from outside or via another codio box, you will need to provide the IP or domain name in place of localhost. Codio does have some limitations. For security purposes, the system will not allow remote connections unless they are secure via a secure encryption key. If you are running this on a non-codio machine, you will not have to perform any of the prework in the next section.
+For Codio Developers Only.
+For those who want to develop and run their server on the codio machine, one member of your team must be designated who will host the server. They will need to setup their machine to allow your local PC, laptop, or your codio box to connect to their codio account. You can do this by following the steps on their website. You will need to follows the steps in the following sections:
+Codio and SSH Keys
+SSH into your box
+Find your local SSH Key Since all the members of the team must share their SSH Keys with the person who is hosting the server, I would suggest that all other members of the team generate their SSH Keys using a fake email. Check on this site on how to generate an SSH key.
+Uploading your SSH Key to Codio Box
+Connecting to your Codio Box
+All of the links above are on the same web page. Just make sure you complete everyone of them. Also when connecting to your codio box using telnet, you must specify the box server info. Do not include http://www. Just use the domain name. (Example: BOX INFO https://jumbo-pelican-80.codio.io should be $telnet jumbo-pelican.codio.io).
+Chat Command Protocal Details
+A communication protocol is a system of rules (i.e. commands) that allow two or more entities of a communications system to transmit information via any kind. Usually a protocol is binary and optimized to minimize the number of bits, and obfuscated for security purposes. Below we have established a simple protocol that is human readable.
+Initial Login - When a user initially connects, your server should generate a guest user ID. This can be done simply by appending the socket descriptor (i.e. client) to the word guest (e.x. guest20; where 20 is the socket descriptor of the connected client). Next, the new user guest20 should be added to the default room called Lobby.
+login <username> - "login with username". Because you are using the telnet client there is no way to implement a user/passwd. In this case when a user issues this command, rename their guestID to the value of username. Make sure any room or DMs have the updated username.
+create <room> - "create a room". Add a new room to your data structure.
+join <room> - "join a room". Add the initiating user to the room list.
+leave <room> - "leave a room". Remove the initiating user from the room list.
+users - "list all users". List all the users you are connected to. Remember, a user could be in several rooms and directly connected to several other users.
+rooms - "list all rooms". List all the rooms available.
+connect <user> - "connect to user (DM)". Directly connect the initiating user to the designated user.
+disconnect <user> - "disconnect to user". Disconnect the initiating user from the designated user.
+exit or logout - "exit chat". Remove the initiating user from all rooms and direct connections, then close the socket descriptor.
+Introduction to Sockets
+What is socket programming?
+Socket programming is a way of connecting two nodes on a network to communicate with each other. One socket(node) listens on a particular port at an IP, while other socket reaches out to the other to form a connection. Server forms the listener socket while client reaches out to the server.
+State diagram for server and client model
+
+Stages of a Socket
+Socket creation:
+int sockfd = socket(domain, type, protocol)
+sockfd: socket descriptor, an integer (like a file-handle)
+domain: integer, communication domain e.g., AF_INET (IPv4 protocol) , AF_INET6 (IPv6 protocol)
+type: communication type
+SOCK_STREAM: TCP(reliable, connection oriented)
+SOCK_DGRAM: UDP(unreliable, connectionless)
+1protocol`: Protocol value for Internet Protocol(IP), which is 0. This is the same number which appears on protocol field in the IP header of a packet.(man protocols for more details)
+Setsockopt:
+int setsockopt(int sockfd, int level, int optname, const void *optval, socklen_t optlen);
+This helps in manipulating options for the socket referred by the file descriptor sockfd. This is completely optional, but it helps in reuse of address and port. Prevents error such as: \“address already in use\”.
+Bind:
+int bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
+After creation of the socket, bind function binds the socket to the address and port number specified in addr(custom data structure). In the example code, we bind the server to the localhost, hence we use INADDR_ANY to specify the IP address.
+Listen:
+int listen(int sockfd, int backlog);
+It puts the server socket in a passive mode, where it waits for the client to approach the server to make a connection. The backlog, defines the maximum length to which the queue of pending connections for sockfd may grow. If a connection request arrives when the queue is full, the client may receive an error with an indication of ECONNREFUSED.
+Accept:
+int new_socket= accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
+It extracts the first connection request on the queue of pending connections for the listening socket, sockfd, creates a new connected socket, and returns a new file descriptor referring to that socket. At this point, connection is established between client and server, and they are ready to transfer data.
+Stages of a Client
+For those who want to write their own client code, Socket connection: Exactly same as that of server’s socket creation
+Connect:
+int connect(int sockfd, const struct sockaddr *addr,socklen_t addrlen);
+The connect() system call connects the socket referred to by the file descriptor sockfd to the address specified by addr. Server’s address and port is specified in addr.
+A Good Network Programming Resource
+Beej’s Guide To Network Programming
+TO DO List
+In server.c, make sure you:
+main() - create the default room for all clients to join when initially connecting
+sigintHandler() - update the signal handler function that is invoked when Ctrl-C is issued from the command line. It should gracefully shutdown, by destroying all data structures resources and closing all sockets. A stretch goal would be to send a message to any connected users saying the server is going down in some identified amount of seconds. Afterwhich you start the process of gracefully shutting down.
+In server_client.c, The main loop is done but:
+Each commands still needs to be implemented.
+The sending operation at the bottom, must be modified to selectively send messages to specific users.
+Data Structures
+Currently, there is not a thourough implementation of the required data structures needed to manage the chat rooms, users, and direct connections.
+Thread Synchronization
+Use the two locks (rw_lock, mutex) and number of readers (numReaders) counter declared in the file to make sure no race conditions occur when accessing your data structures. Remember each user will have its own thread server executing on their behave. There is a real possibility that two or more users will try to create rooms, join rooms, connect, or query the system for a list of users and rooms at the same time.
